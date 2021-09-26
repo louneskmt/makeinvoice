@@ -22,10 +22,11 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-var TorProxyURL = "socks5://127.0.0.1:9050"
+var DefaultTorProxyURL = "socks5://127.0.0.1:9050"
 
 type Params struct {
 	Backend         BackendParams
+	TorProxyURL     string
 	Msatoshi        int64
 	Description     string
 	DescriptionHash []byte
@@ -100,7 +101,14 @@ func MakeInvoice(params Params) (bolt11 string, err error) {
 
 	// use a tor proxy?
 	if params.Backend.isTor() {
-		torURL, _ := url.Parse(TorProxyURL)
+		var torURL *url.URL
+
+		if params.TorProxyURL != "" {
+			torURL, _ = url.Parse(params.TorProxyURL)
+		} else {
+			torURL, _ = url.Parse(DefaultTorProxyURL)
+		}
+
 		specialTransport.Proxy = http.ProxyURL(torURL)
 	}
 
